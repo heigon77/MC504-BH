@@ -6,8 +6,9 @@
 #define N_THR 10
 
 void* f_thread(void *v) {
-  int id = (int) v;
-  printf("Thread %d\n", id);  
+  int* id = (int *) v;
+  printf("Thread %d\n", id[0]);
+  printf("Thread %d\n", id[1]);
   return NULL; 
 } 
 
@@ -15,14 +16,17 @@ void* f_thread(void *v) {
 int main(int argc, char const *argv[])
 {
 
-    pthread_t thr[N_THR];
-    int i;
+    int *nums = (int*)malloc((2)*sizeof(int));
 
-    for (i = 0; i < N_THR; i++) 
-        pthread_create(&thr[i], NULL, f_thread, (void*) i);
+    nums[0] = 10;
+    nums[1] = 20;
 
-    for (i = 0; i < N_THR; i++) 
-        pthread_join(thr[i], NULL); 
+    pthread_t thr;
+
+
+    pthread_create(&thr, NULL, f_thread, (void*) nums);
+
+    pthread_join(thr, NULL); 
 
     return 0;
 }
