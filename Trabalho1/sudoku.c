@@ -5,17 +5,50 @@
 
 #define N_THR 10
 
+int idThr = 0; // identifca um número pra thread
+
 void* f_thread(void **v) {
     int** id = (int **) v;
     int **matriz = id[1];
+    //int idT = id[0];
+    int idT = idThr++; // não consegui usar id[0]
+
+    for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            if (i == idT)
+            {
+                matriz[i][j] += matriz[i][j] + i;
+            }
+            
+        }
+        
+    }
+
+    printf("Essa thread cuida da linha: %d\n", idT);
+    
 
 
-    printf("Endereço da matriz depois da chamada : %d\n", id[1]);
-    printf("conteúdo da matriz tem que ser igual a banana: %d\n",matriz[2][3]);
+    // printf("Endereço da matriz depois da chamada : %d\n", id[1]);
+    // printf("conteúdo da matriz tem que ser igual a banana: %d\n",matriz[2][3]);
     //printf("teste leitura matriz %d", );
     return NULL; 
 }
 
+void imprime( int **mat,int l, int c){  //funcao para printar matriz
+
+    for (int i = 0; i < c; i++)
+    {
+        for (int j = 0; j < l; j++)
+        {
+            printf("%d ",mat[i][j]);
+        }
+        printf("\n");
+        
+    }
+    
+}
 
 int main(int argc, char const *argv[]){   
     int colunas = 9;
@@ -29,21 +62,56 @@ int main(int argc, char const *argv[]){
     }
     for(int i=0; i<linhas;i++){//preenchendo ela para testes
         for(int j=0; j<colunas;j++){
-            matriz[i][j] = i*colunas+j;
+            matriz[i][j] = 0;
         }
     }    
 
-    printf("banana : %d\n", matriz[2][3]);
+    // printf("banana : %d\n", matriz[2][3]);
 
-    nums[0] = 1; //Identificador da thread
+    nums[0] = 1; //Identificador da thread; não consegui usar
     nums[1] = matriz;
-    printf("maca : %d\n", nums[0]);
-    printf("endereço de matriz antes de ir pra thread : %d\n", nums[1]);
+    // printf("maca : %d\n", nums[0]);
+    // printf("endereço de matriz antes de ir pra thread : %d\n", nums[1]);
     
 
-    pthread_t thr;  //chamada da thread
-    pthread_create(&thr, NULL, f_thread, (void**) nums);
-    pthread_join(thr, NULL); 
+    pthread_t thr[linhas];
+      //chamada da thread
+
+    for (int i = 0; i < linhas; i++) //cria uma thread pra cada coluna
+    {
+        nums[0] = i; //deveria iniciar cada thread com um identificado, mas como é um ponteiro, ao atualizar muda a thread ja iniciada, aí tinha várias thread com o mesmo identificador
+        pthread_create(&thr[i], NULL, f_thread, (void**) nums);
+    }
+
+
+    for (int i = 0; i < linhas; i++) // une as threads
+    {
+        pthread_join(thr[i], NULL); 
+    }
+
+    printf("\nResultado da primeira iteração\n");
+
+    imprime(matriz,linhas,linhas);
+    printf("\n");
+
+    idThr = 0; //Reinicia as threads
+
+    for (int i = 0; i < linhas; i++) //cria uma thread pra cada coluna uma segunda vez
+    {
+        nums[0] = i;
+        pthread_create(&thr[i], NULL, f_thread, (void**) nums);
+    }
+
+
+    for (int i = 0; i < linhas; i++) // une as threads
+    {
+        pthread_join(thr[i], NULL); 
+    }
+
+     printf("\nResultado da segunda iteração\n");
+
+    imprime(matriz,linhas,colunas);
+
     free(matriz);
     free(nums);
 
