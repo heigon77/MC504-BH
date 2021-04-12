@@ -4,22 +4,91 @@
 #include <unistd.h>
 
 #define N_THR 10
+#define N 9
+#define UNASSIGNED 0
 
-int idThr = 0; // identifca um número pra thread
+int idThr = 1; // identifca um número pra thread
+
+int is_exist_row(int **grid[N][N], int row, int num){
+	for (int col = 0; col < 9; col++) {
+		if (grid[row][col] == num) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int is_exist_col(int **grid[N][N], int col, int num) {
+	for (int row = 0; row < 9; row++) {
+		if (grid[row][col] == num) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int is_exist_box(int **grid[N][N], int startRow, int startCol, int num) {
+	for (int row = 0; row < 3; row++) {
+		for (int col = 0; col < 3; col++) {
+			if (grid[row + startRow][col + startCol] == num) {
+				return 1;
+			} 
+		}
+	}
+	return 0;
+}
+
+int is_safe_num(int **grid[N][N], int row, int col, int num) {
+	return !is_exist_row(grid, row, num) 
+			&& !is_exist_col(grid, col, num) 
+			&& !is_exist_box(grid, row - (row % 3), col - (col %3), num);
+}
+
+int find_unassigned(int **grid[N][N], int *row, int *col) {
+	for (*row = 0; *row < N; (*row)++) {
+		for (*col = 0; *col < N; (*col)++) {
+			if (grid[*row][*col] == 0) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+int solve(int **grid[N][N],int num) {
+	
+	int row = 0;
+	int col = 0;
+	
+	if (!find_unassigned(grid, &row, &col)){
+		return 1;
+	}
+	
+		
+		if (is_safe_num(grid, row, col, num)) {
+			grid[row][col] = num;
+			
+			if (solve(grid,num)) {
+				return 1;
+			}
+			
+			grid[row][col] = UNASSIGNED;
+	}
+	
+	return 0;
+}
 
 void* f_thread(void **v) {
     int** id = (int **) v;
     int **matriz = id[1];
     //int idT = id[0];
     int idT = idThr++; // não consegui usar id[0]
-    for (int i = 0; i < 9; i++){
-        for (int j = 0; j < 9; j++){
-            if (i == idT){
-                matriz[i][j] += matriz[i][j] + i;
-            }
-        }
-    }
-    printf("Essa thread cuida da linha: %d\n", idT);
+    
+
+    solve(matriz,idT);
+    
+
+    // printf("Essa thread cuida da linha: %d\n", idT);
     // printf("Endereço da matriz depois da chamada : %d\n", id[1]);
     // printf("conteúdo da matriz tem que ser igual a banana: %d\n",matriz[2][3]);
     //printf("teste leitura matriz %d", );
@@ -72,7 +141,7 @@ int main(int argc, char const *argv[]){
 
     leitura(matriz);
 
-    /*
+    
     for(int i=0; i<linhas;i++){//preenchendo ela para testes
         for(int j=0; j<colunas;j++){
             matriz[i][j] = 0;
@@ -96,26 +165,8 @@ int main(int argc, char const *argv[]){
         pthread_join(thr[i], NULL); 
     }
 
-    printf("\nResultado da primeira iteração\n");
+
     imprime(matriz,linhas,colunas);
-    printf("\n");
-
-    idThr = 0; //Reinicia as threads
-
-    for (int i = 0; i < linhas; i++){ //cria uma thread pra cada coluna uma segunda vez
-        nums[0] = i;
-        pthread_create(&thr[i], NULL, f_thread, (void**) nums);
-    }
-
-    for (int i = 0; i < linhas; i++){ // une as threads
-        pthread_join(thr[i], NULL); 
-    }
-
-    printf("\nResultado da segunda iteração\n");
-    imprime(matriz,linhas,colunas);
-    */
-    free(matriz);
-    free(nums);
 
     return 0;
 }
